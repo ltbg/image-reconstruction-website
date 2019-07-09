@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Jquery Ajax Test</title>
+    <script type="text/javascript" src="http://code.jquery.com/jquery-latest.js"></script>
+<body>
+<canvas id="heat-map" width="400" height="400">
+
+</canvas>
+<script>
+
+
+ $.getJSON("/readmat",function(data){
+  var canvas = document.getElementById('heat-map');
+  if (canvas.getContext) {
+    var context = canvas.getContext('2d');
+  }
+
+  function findMax(obj) {
+    let max = 0;
+    for (let key in obj) {
+      if (obj[key]['grey'] >= max) {
+        max = obj[key]['grey'];
+      }
+    }
+    return max
+  }
+
+  function findMin(obj) {
+    let min = 1;
+    for (let key in obj) {
+      if (obj[key]['grey'] <= min) {
+        min = obj[key]['grey'];
+      }
+    }
+    return min
+  }
+
+  let min = findMin(data);
+  let max = findMax(data);
+  console.log(max, min);
+
+  function drawPoint(x, y, radius, grey) {
+    context.beginPath();
+    context.arc(x + 200, y + 200, radius, 0, 2 * Math.PI);
+    context.closePath();
+    // 创建渐变色: r,g,b取值比较自由，我们只关注alpha的数值
+    let radialGradient = context.createRadialGradient(x + 200, Math.abs(-y + 200), 0, x + 200, Math.abs(-y + 200), radius);
+    radialGradient.addColorStop(0.0, "rgba(0,0,0,1)");
+    radialGradient.addColorStop(1.0, "rgba(0,0,0,0)");
+    context.fillStyle = radialGradient;
+
+    // 设置globalAlpha: 需注意取值需规范在0-1之间
+    let globalAlpha = data[point].grey;
+    context.globalAlpha = Math.max(Math.min(globalAlpha, 1), 0);
+    context.beginPath();
+    context.arc(200, 200, 100, 0, Math.PI * 2, true);
+    // 填充颜色    ctx.clip();
+
+    context.fill();
+  }
+
+  for (var point in data) {
+    drawPoint(+data[point].x, +data[point].y, 27.5, +data[point].grey)
+  }
+  function getColorPaint() {
+    let paletteCanvas = document.createElement('canvas');
+    let paletteCtx = paletteCanvas.getContext('2d');
+    let gradientConfig = {
+      .50: 'rgb(53, 42, 135)',
+      .55: 'rgb(3, 99, 225)',
+      .60: 'rgb(18, 125, 216)',
+      .65: 'rgb(9, 152, 209)',
+      .70: 'rgb(15, 174, 185)',
+      .75: 'rgb(66, 187, 152)',
+      .80: 'rgb(135, 191, 119)',
+      .85: 'rgb(200, 188, 93)',
+      .90: 'rgb(253, 190, 61)',
+      .95: 'rgb(247, 216, 38)',
+      1: 'rgb(249, 251, 14)',
+    };
+    paletteCanvas.width = 255;
+    paletteCanvas.height = 1;
+    let gradient = paletteCtx.createLinearGradient(0, 0, 256, 1);
+    for (let key in gradientConfig) {
+      gradient.addColorStop(key, gradientConfig[key])
+    }
+    paletteCtx.fillStyle = gradient;
+    paletteCtx.fillRect(0, 0, 256, 1);
+    return paletteCtx.getImageData(0, 0, 256, 1).data
+  }
+
+  let palette = getColorPaint();
+  let img = context.getImageData(0, 0, 400, 400);
+  let imgData = img.data;
+  let len = imgData.length;
+  for (let i = 3; i < len; i += 4) {
+    let alpha = imgData[i];
+    let offset = alpha * 4;
+    if (!offset) {
+      continue
+    }
+    imgData[i] = 255;
+    imgData[i - 3] = palette[offset];
+    imgData[i - 2] = palette[offset + 1];
+    imgData[i - 1] = palette[offset + 2];
+  }
+  context.putImageData(img, 0, 0, 0, 0, 400, 400);
+
+    });
+
+
+</script>
+</body>
+</head>
+
+
+
+</html>
+

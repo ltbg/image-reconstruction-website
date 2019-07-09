@@ -1,0 +1,27 @@
+{% extends 'base.html' %}
+
+
+{% import 'bootstrap/wtf.html' as wtf %}
+
+{% block content %}
+    <div class="col-md-6 col-md-offset-3">
+        <h3>上传实验数据</h3>
+
+        {#  显示闪现的所有信息   #}
+        {% for msg in get_flashed_messages(category_filter='ok') %}
+            <div class="alert alert-success alert-dismissible" role="alert">
+                <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span>
+                </button>
+                <strong>Success!</strong> {{ msg }}.
+            </div>
+        {% endfor %}
+        {% for msg in get_flashed_messages(category_filter='error') %}
+            <div class="alert alert-warning alert-dismissible" role="alert">
+                <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span>
+                </button>
+                <strong>Warning!</strong> {{ msg }}.
+            </div>
+        {% endfor %}
+        {{ wtf.quick_form(form) }}
+    </div>
+{% endblock %}
